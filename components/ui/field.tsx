@@ -8,7 +8,7 @@ export function Label({ className, ...props }: ComponentProps<"label">) {
 }
 
 const fieldBase =
-  "w-full rounded-[14px] border-2 border-charcoal/25 bg-paper px-4 text-base text-charcoal placeholder:text-muted/80 transition-colors hover:border-charcoal/50 focus-visible:border-charcoal";
+  "w-full rounded-[14px] border-2 border-charcoal/25 bg-paper px-4 text-base text-charcoal placeholder:text-muted/80 transition-colors hover:border-charcoal/50 focus-visible:border-charcoal aria-invalid:border-paprika";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input className={cn(fieldBase, "h-12", className)} {...props} />;

@@ -1,7 +1,7 @@
 "use client";
 
 import { Bike, ShoppingBag, Store, Trash2, X } from "lucide-react";
-import type { ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { ChatOrderIcon } from "@/components/icons";
 import { QuantityStepper } from "@/components/quantity-stepper";
 import { Button } from "@/components/ui/button";
@@ -25,15 +25,42 @@ export function CartDrawer() {
   const c = t.cart;
   const isDelivery = cart.orderType === "delivery";
 
-  // Why the send button is disabled (first unmet requirement), or null when ready.
-  const blocker =
-    cart.lines.length === 0
-      ? c.needItems
-      : cleanLine(cart.name) === ""
-        ? c.needName
-        : isDelivery && cleanLine(cart.address) === ""
-          ? c.needAddress
-          : null;
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLInputElement>(null);
+  // Set when Send is tapped while something is missing; turns on the per-field messages.
+  const [attempted, setAttempted] = useState(false);
+
+  const isEmpty = cart.lines.length === 0;
+  const nameMissing = cleanLine(cart.name) === "";
+  const addressMissing = isDelivery && cleanLine(cart.address) === "";
+  const showNameError = attempted && !isEmpty && nameMissing;
+  const showAddressError = attempted && !isEmpty && addressMissing;
+
+  // Why the order can't be sent yet (first unmet requirement), or null when ready.
+  const blocker = isEmpty ? c.needItems : nameMissing ? c.needName : addressMissing ? c.needAddress : null;
+
+  /**
+   * Send tapped while not ready: scroll to and focus the first missing field
+   * (name, then address for delivery), whose message appears under it.
+   * With an empty cart there is no field to fix, so the list scrolls to the top.
+   */
+  function handleBlockedSend() {
+    setAttempted(true);
+    const behavior: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    const target = isEmpty ? null : nameMissing ? nameRef.current : addressMissing ? addressRef.current : null;
+    if (target) {
+      target.scrollIntoView({ block: "center", behavior });
+      target.focus({ preventScroll: true });
+    } else {
+      bodyRef.current?.scrollTo({ top: 0, behavior });
+    }
+  }
+
+  function handleOpenChange(open: boolean) {
+    if (!open) setAttempted(false);
+    cart.setOpen(open);
+  }
 
   const waUrl = blocker
     ? null
@@ -52,7 +79,7 @@ export function CartDrawer() {
       );
 
   return (
-    <Sheet open={cart.isOpen} onOpenChange={cart.setOpen}>
+    <Sheet open={cart.isOpen} onOpenChange={handleOpenChange}>
       <SheetContent>
         {/* Header */}
         <div className="flex items-center justify-between gap-4 border-b-2 border-charcoal px-5 py-4">
@@ -68,7 +95,7 @@ export function CartDrawer() {
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-5 py-5">
+        <div ref={bodyRef} className="flex-1 overflow-y-auto px-5 py-5">
           {cart.lines.length === 0 ? (
             <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-charcoal/30 px-6 py-10 text-center">
               <ShoppingBag className="size-10 text-paprika" aria-hidden="true" />
@@ -145,15 +172,19 @@ export function CartDrawer() {
                 {c.name} <span className="font-semibold text-muted">({c.required})</span>
               </Label>
               <Input
+                ref={nameRef}
                 id="order-name"
                 name="name"
                 autoComplete="name"
                 maxLength={60}
                 required
+                aria-invalid={showNameError}
+                aria-describedby={showNameError ? "order-name-error" : undefined}
                 placeholder={c.namePlaceholder}
                 value={cart.name}
                 onChange={(e) => cart.setField("name", e.target.value)}
               />
+              {showNameError ? <FieldError id="order-name-error">{c.nameMissing}</FieldError> : null}
             </div>
 
             {isDelivery ? (
@@ -162,15 +193,19 @@ export function CartDrawer() {
                   {c.address} <span className="font-semibold text-muted">({c.required})</span>
                 </Label>
                 <Input
+                  ref={addressRef}
                   id="order-address"
                   name="address"
                   autoComplete="street-address"
                   maxLength={200}
                   required
+                  aria-invalid={showAddressError}
+                  aria-describedby={showAddressError ? "order-address-error" : undefined}
                   placeholder={c.addressPlaceholder}
                   value={cart.address}
                   onChange={(e) => cart.setField("address", e.target.value)}
                 />
+                {showAddressError ? <FieldError id="order-address-error">{c.addressMissing}</FieldError> : null}
               </div>
             ) : null}
 
@@ -191,28 +226,36 @@ export function CartDrawer() {
           </div>
         </div>
 
-        {/* Totals + send, pinned to the bottom of the drawer */}
-        <div className="border-t-2 border-charcoal bg-paper px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
-          <dl className="flex flex-col gap-1.5 text-[15px]">
+        {/* Totals + send, pinned to the bottom of the drawer. Kept compact so the
+            scrollable area stays well above 45% of the drawer on a 360x640 phone. */}
+        <div className="border-t-2 border-charcoal bg-paper px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+          <dl className="flex flex-col gap-0.5 text-sm">
             <TotalRow label={c.subtotal} value={cart.subtotal} />
             {isDelivery ? <TotalRow label={c.deliveryFee} value={cart.deliveryFee} /> : null}
             <TotalRow label={c.total} value={cart.total} strong />
           </dl>
 
           {waUrl ? (
-            <Button asChild size="lg" className="mt-4 w-full">
+            <Button asChild className="mt-3 w-full">
               <a href={waUrl} target="_blank" rel="noopener noreferrer">
                 <ChatOrderIcon className="size-6" />
                 {c.send}
               </a>
             </Button>
           ) : (
-            <Button size="lg" className="mt-4 w-full" disabled aria-describedby="send-hint">
+            // aria-disabled (not disabled) so it stays focusable and tappable:
+            // a tap takes the visitor to whatever is still missing.
+            <Button
+              aria-disabled="true"
+              aria-describedby="send-hint"
+              onClick={handleBlockedSend}
+              className="mt-3 w-full cursor-not-allowed opacity-50 shadow-none active:translate-y-0"
+            >
               <ChatOrderIcon className="size-6" />
               {c.send}
             </Button>
           )}
-          <p id="send-hint" aria-live="polite" className="mt-3 text-center text-sm font-semibold text-muted">
+          <p id="send-hint" aria-live="polite" className="mt-2 truncate text-center text-[13px] font-semibold text-muted">
             {blocker ?? c.ready}
           </p>
         </div>
@@ -221,11 +264,26 @@ export function CartDrawer() {
   );
 }
 
+function FieldError({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <p id={id} className="mt-1.5 text-sm font-bold text-paprika">
+      {children}
+    </p>
+  );
+}
+
 function TotalRow({ label, value, strong = false }: { label: string; value: number; strong?: boolean }) {
   return (
-    <div className={cn("flex items-baseline justify-between gap-4", strong && "mt-1 border-t-2 border-dashed border-charcoal/20 pt-2")}>
-      <dt className={cn(strong ? "font-display text-lg font-extrabold" : "font-semibold text-muted")}>{label}</dt>
-      <dd className={cn("tabular-nums", strong ? "font-display text-2xl font-extrabold text-paprika" : "font-bold")}>
+    <div
+      className={cn(
+        "flex items-baseline justify-between gap-4 leading-5",
+        strong && "mt-1 border-t-2 border-dashed border-charcoal/20 pt-1.5 leading-7",
+      )}
+    >
+      <dt className={cn("whitespace-nowrap", strong ? "font-display text-base font-extrabold" : "font-semibold text-muted")}>
+        {label}
+      </dt>
+      <dd className={cn("tabular-nums", strong ? "font-display text-xl font-extrabold text-paprika" : "font-bold")}>
         <span dir="ltr">{formatMoney(value)}</span>
       </dd>
     </div>
