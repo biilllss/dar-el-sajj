@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Design tokens
+   cream #FFF4E0 · paprika #B3261E · charcoal #1B1B1B · mustard #E3A82B
+   Contrast (WCAG): charcoal/cream 16.5:1 · paprika/cream 6.0:1 ·
+   cream/paprika 6.0:1 · muted/cream 7.0:1 · charcoal/mustard 8.1:1.
+   Mustard is never used for text on cream (1.9:1); only as a fill.
+------------------------------------------------------------------- */
+@theme {
+  --color-cream: #fff4e0;
+  --color-cream-deep: #f7e4c3;
+  --color-paper: #fffaf1;
+  --color-paprika: #b3261e;
+  --color-paprika-dark: #8e1c16;
+  --color-charcoal: #1b1b1b;
+  --color-mustard: #e3a82b;
+  --color-muted: #5b5248;
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+
+  --animate-cart-bounce: cart-bounce 0.55s cubic-bezier(0.3, 1.6, 0.5, 1);
+  --animate-sheet-in: sheet-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-sheet-out: sheet-out 0.22s ease-in;
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-fade-out: fade-out 0.2s ease-in;
+
+  @keyframes cart-bounce {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.22) translateY(-3px); }
+    55% { transform: scale(0.94); }
+    75% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+  /* --dir is +1 in LTR and -1 in RTL, so the drawer slides in from the inline-end edge. */
+  @keyframes sheet-in {
+    from { transform: translateX(calc(100% * var(--dir))); }
+    to { transform: translateX(0); }
+  }
+  @keyframes sheet-out {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(100% * var(--dir))); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+}
+
+/* Direction multiplier for the few things CSS can't express logically
+   (transforms and box-shadow offsets). */
+:root {
+  --dir: 1;
+}
+[dir="rtl"] {
+  --dir: -1;
+}
+
+/* Chunky offset shadows that mirror in RTL. */
+@utility shadow-block {
+  box-shadow: calc(6px * var(--dir)) 6px 0 0 var(--color-charcoal);
+}
+@utility shadow-block-paprika {
+  box-shadow: calc(8px * var(--dir)) 8px 0 0 var(--color-paprika);
+}
+
+/* Placeholder "map" texture: a main road over a street grid. */
+@utility map-pattern {
+  background-color: var(--color-cream-deep);
+  background-image:
+    linear-gradient(var(--road-angle, 28deg), transparent 45%, rgb(255 250 241 / 0.95) 45% 55%, transparent 55%),
+    linear-gradient(calc(var(--road-angle, 28deg) + 70deg), transparent 47%, rgb(255 250 241 / 0.8) 47% 52%, transparent 52%),
+    repeating-linear-gradient(0deg, transparent 0 34px, rgb(27 27 27 / 0.07) 34px 36px),
+    repeating-linear-gradient(90deg, transparent 0 46px, rgb(27 27 27 / 0.07) 46px 48px);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer base {
+  html {
+    background-color: var(--color-cream);
+    color: var(--color-charcoal);
+    -webkit-tap-highlight-color: transparent;
+    /* Sticky header (64px) + sticky menu tabs: keep anchored headings visible. */
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    /* clip (not hidden) so position: sticky keeps working. */
+    overflow-x: clip;
+    font-feature-settings: "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-mustard);
+    color: var(--color-charcoal);
+  }
+
+  /* One clear focus style everywhere. */
+  :focus-visible {
+    outline: 3px solid var(--color-charcoal);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  .on-dark :focus-visible {
+    outline-color: var(--color-mustard);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Arabic. Unlayered on purpose so it wins over utility classes.
+   - Cairo for every Arabic run (whole page in AR mode, Arabic names in EN mode).
+   - letter-spacing breaks Arabic letter joining, so it's reset.
+   - Arabic needs more line-height than tight Latin display type.
+------------------------------------------------------------------- */
+:lang(ar) {
+  font-family: var(--font-arabic);
+  letter-spacing: normal;
+}
+:lang(ar):is(h1, h2, h3, h4) {
+  line-height: 1.25;
+}
+
+/* Fade-up on scroll (see components/reveal.tsx). Only applied once JS runs. */
+[data-reveal="hidden"] {
+  opacity: 0;
+  transform: translateY(18px);
+}
+[data-reveal="shown"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Respect reduced motion: no fades, no bounce, no slide. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
