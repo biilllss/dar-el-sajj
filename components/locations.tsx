@@ -1,18 +1,14 @@
 "use client";
 
 import { MapPin } from "lucide-react";
-import type { CSSProperties } from "react";
 import { BranchHoursLine, BranchStatus } from "@/components/branch-status";
 import { ChatOrderIcon } from "@/components/icons";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
-import { BRANCHES, type BranchId } from "@/lib/config";
+import { BRANCHES } from "@/lib/config";
 import { useLang } from "@/lib/i18n";
-
-/** Road angle per branch, so the two placeholder maps don't look identical. */
-const ROAD_ANGLE: Record<BranchId, string> = { hamra: "28deg", jounieh: "-34deg" };
 
 export function Locations() {
   const { t } = useLang();
@@ -40,34 +36,39 @@ export function Locations() {
             return (
               <Reveal key={branch.id} delay={i * 90} className="h-full">
                 <article className="flex h-full flex-col overflow-hidden rounded-2xl border-2 border-charcoal bg-paper">
-                  {/* Placeholder map: swap for an embed once there's a real address. */}
+                  {/* Branch info card (no map embed: addresses are only shared once an order is placed). */}
                   <div
-                    role="img"
-                    aria-label={t.locations.mapLabel(info.area)}
-                    className="map-pattern relative aspect-[16/9] border-b-2 border-charcoal"
-                    style={{ "--road-angle": ROAD_ANGLE[branch.id] } as CSSProperties}
+                    data-fab-avoid
+                    className="on-dark relative overflow-hidden border-b-2 border-charcoal bg-charcoal p-5 text-cream sm:p-6"
                   >
-                    <span data-fab-avoid className="absolute start-3 top-3 rounded-full bg-charcoal px-3 py-1 text-xs font-extrabold uppercase tracking-[0.1em] text-cream">
-                      {t.locations.mapPreview}
-                    </span>
-                    <span className="absolute inset-0 grid place-items-center">
-                      <span className="grid size-14 place-items-center rounded-full border-2 border-charcoal bg-paprika text-cream shadow-block">
-                        <MapPin className="size-7" aria-hidden="true" />
-                      </span>
-                    </span>
+                    <MapPin
+                      aria-hidden="true"
+                      strokeWidth={1.25}
+                      className="pointer-events-none absolute -end-8 -top-8 size-40 text-cream/[0.07]"
+                    />
+                    <h3 className="relative font-display text-3xl font-extrabold leading-none tracking-[-0.02em]">
+                      {info.name}
+                    </h3>
+                    <p className="relative mt-2.5 flex items-center gap-1.5 text-[15px] font-semibold text-cream/85">
+                      <MapPin className="size-4 shrink-0 text-mustard" aria-hidden="true" />
+                      {info.area}
+                    </p>
+
+                    <div className="relative mt-5 flex flex-col gap-4 border-t-2 border-dashed border-cream/20 pt-4">
+                      <div>
+                        <p className="mb-1.5 text-sm font-extrabold uppercase tracking-[0.12em] text-mustard">
+                          {t.locations.hours}
+                        </p>
+                        <BranchHoursLine hours={branch.hours} tone="dark" />
+                      </div>
+                      <p className="inline-flex items-center gap-2 self-start rounded-full border-2 border-cream/25 px-3 py-1.5 text-sm font-bold">
+                        <ChatOrderIcon className="size-4 shrink-0 text-mustard" />
+                        {t.locations.addressOnOrder}
+                      </p>
+                    </div>
                   </div>
 
                   <div data-fab-avoid className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
-                    <div>
-                      <h3 className="font-display text-3xl font-extrabold leading-none tracking-[-0.02em]">{info.name}</h3>
-                      <p className="mt-2 text-[15px] font-semibold text-muted">{info.area}</p>
-                    </div>
-                    <div>
-                      <p className="mb-1.5 text-sm font-extrabold uppercase tracking-[0.12em] text-paprika">
-                        {t.locations.hours}
-                      </p>
-                      <BranchHoursLine hours={branch.hours} />
-                    </div>
                     <BranchStatus hours={branch.hours} className="self-start" />
                     <Button
                       variant="outline"

@@ -3,9 +3,10 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Current time, refreshed every 30 seconds, or `null` during server rendering
- * and hydration. Open/closed status depends on the visitor's clock, so it must
- * never be baked into the static HTML.
+ * The current moment (an absolute UTC instant, refreshed every 30 seconds), or
+ * `null` during server rendering and hydration, so a status is never baked
+ * into the static HTML. The device's time zone plays no part: lib/hours.ts
+ * converts this instant to Asia/Beirut wall-clock time before comparing.
  */
 function subscribe(onChange: () => void) {
   const id = window.setInterval(onChange, 30_000);

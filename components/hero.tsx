@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChatOrderIcon, Squiggle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
+import { DELIVERY_FEE } from "@/lib/config";
 import { useLang } from "@/lib/i18n";
 import { PHOTOS } from "@/lib/images";
 import { getItem } from "@/lib/menu";
@@ -52,7 +53,7 @@ export function Hero() {
           </div>
 
           <ul className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[15px] font-semibold">
-            {t.hero.facts.map((fact) => (
+            {t.hero.facts(formatPrice(DELIVERY_FEE)).map((fact) => (
               <li key={fact} className="flex items-center gap-1.5">
                 <Check className="size-4 text-paprika" aria-hidden="true" strokeWidth={3} />
                 {fact}

@@ -57,7 +57,8 @@ export const translations = defineTranslations({
       lede: "Shawarma, falafel and charcoal grills made fresh every day in Hamra and Jounieh. Build your order here, send it on WhatsApp, done.",
       orderCta: "Order on WhatsApp",
       menuCta: "See the menu",
-      facts: ["Pickup or delivery", "Hamra + Jounieh", "Open daily from 11:00"],
+      /** `fee` is DELIVERY_FEE, already formatted ("$2"). */
+      facts: (fee: string) => ["Pickup or delivery", `Delivery ${fee}`, "Hamra + Jounieh", "Open daily from 11:00"],
       imageAlt: "Mixed grill platter with chicken skewers, kafta, grilled potatoes and dips",
       sticker: "Wraps from",
       tagLabel: "Best seller",
@@ -69,7 +70,6 @@ export const translations = defineTranslations({
       selected: "Selected",
     },
     status: {
-      checking: "Checking hours…",
       open: "Open now",
       closed: "Closed",
       closesAt: (time: string) => (time === "00:00" ? "closes at midnight" : `closes at ${time}`),
@@ -229,7 +229,7 @@ export const translations = defineTranslations({
       jounieh: {
         name: "Jounieh",
         area: "Jounieh, Keserwan",
-        blurb: "Our coastal branch, open an hour later, until midnight.",
+        blurb: "Our coastal branch, open until midnight.",
       },
     } satisfies Record<BranchId, BranchText>,
     cart: {
@@ -312,8 +312,7 @@ export const translations = defineTranslations({
       title: "Come say hi",
       lede: "Pick up in person, or order from whichever branch is closest.",
       hours: "Hours",
-      mapPreview: "Map preview",
-      mapLabel: (area: string) => `Map preview placeholder for ${area}`,
+      addressOnOrder: "Address shared on order",
       orderFrom: (name: string) => `Order from ${name}`,
       note: "Concept project: street addresses are left out on purpose.",
     },
@@ -359,7 +358,7 @@ export const translations = defineTranslations({
       lede: "شاورما وفلافل ومشاوي عالفحم، منحضّرها طازة كل يوم بالحمرا وجونية. ركّب طلبيتك هون، ابعتها عالواتساب، وخلصنا.",
       orderCta: "اطلب عالواتساب",
       menuCta: "شوف المنيو",
-      facts: ["استلام أو توصيل", "الحمرا وجونية", "فاتحين كل يوم من الـ11"],
+      facts: (fee: string) => ["استلام أو توصيل", `التوصيل ${fee}`, "الحمرا وجونية", "فاتحين كل يوم من الـ11"],
       imageAlt: "صينية مشاوي مشكّلة مع أسياخ دجاج وكفتة وبطاطا مشوية وصلصات",
       sticker: "السندويش من",
       tagLabel: "الأكتر طلباً",
@@ -371,7 +370,6 @@ export const translations = defineTranslations({
       selected: "مختار",
     },
     status: {
-      checking: "عم نشيّك عالدوام…",
       open: "فاتحين هلّق",
       closed: "مسكّرين",
       closesAt: (time: string) => (time === "00:00" ? "منسكّر نص الليل" : `منسكّر الساعة ${time}`),
@@ -532,7 +530,7 @@ export const translations = defineTranslations({
       jounieh: {
         name: "جونية",
         area: "جونية، كسروان",
-        blurb: "فرعنا عالبحر، بيضل فاتح ساعة زيادة لنص الليل.",
+        blurb: "فرعنا عالبحر، فاتح لنص الليل.",
       },
     } satisfies Record<BranchId, BranchText>,
     cart: {
@@ -615,8 +613,7 @@ export const translations = defineTranslations({
       title: "مرّوا لعنّا",
       lede: "استلموا بنفسكن، أو اطلبوا من أقرب فرع إلكن.",
       hours: "الدوام",
-      mapPreview: "معاينة الخريطة",
-      mapLabel: (area: string) => `مكان معاينة الخريطة لـ ${area}`,
+      addressOnOrder: "منبعتلك العنوان مع الطلب",
       orderFrom: (name: string) => `اطلب من فرع ${name}`,
       note: "مشروع تجريبي: ما حطّينا عناوين الشوارع عن قصد.",
     },
